@@ -12,6 +12,10 @@ GO
 -- --------------------------------------------------
 IF OBJECT_ID(N'[dbo].[FK_RespondentAttributes_AttributeId]', 'F') IS NOT NULL
     ALTER TABLE [dbo].[RespondentAttributes] DROP CONSTRAINT [FK_RespondentAttributes_AttributeId];
+IF OBJECT_ID(N'[dbo].[FK_RequiredAttributes_AttributeId]', 'F') IS NOT NULL
+    ALTER TABLE [dbo].[RequiredAttributes] DROP CONSTRAINT [FK_RequiredAttributes_AttributeId];
+IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='RequiredAttributes' AND COLUMN_NAME ='AttributeId')
+    ALTER TABLE [dbo].[RequiredAttributes] ALTER COLUMN AttributeId nvarchar(50) not null;
 IF OBJECT_ID(N'[dbo].[FK_AttributeSettings_AttributeId]', 'F') IS NOT NULL
     ALTER TABLE [dbo].[AttributeSettings] DROP CONSTRAINT [FK_AttributeSettings_AttributeId];
 
@@ -20,15 +24,12 @@ IF OBJECT_ID(N'[dbo].[FK_AttributeSettings_AttributeId]', 'F') IS NOT NULL
 -- --------------------------------------------------
 IF OBJECT_ID(N'[dbo].[AttributeOptions]', 'U') IS NOT NULL
     DROP TABLE [dbo].[AttributeOptions];
-
 IF OBJECT_ID(N'[dbo].[Attributes]', 'U') IS NOT NULL
-BEGIN
     DROP TABLE [dbo].[Attributes];
-END
-
 
 CREATE TABLE [dbo].[Attributes](
 	[Id] [nvarchar](50) NOT NULL,
+    [Alias] [nvarchar](50) default '' NOT NULL,
 	[Name] [varchar](100) NULL,
 	[ShortName] [varchar](100) NULL,
 	[Label] [varchar](500) NULL,
@@ -39,37 +40,7 @@ CREATE TABLE [dbo].[Attributes](
     )WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
--- Adding trigger on Attributes table to automatically create AttributeSettings for the newly added attribute
-
-IF EXISTS (SELECT * FROM sys.objects WHERE [type] = 'TR' AND [name] = 'trigger_InsertAttributeSetting_Attributes')
-BEGIN
-DROP TRIGGER [dbo].[trigger_InsertAttributeSetting_Attributes]
-END
-
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
-
-
-CREATE TRIGGER [dbo].[trigger_InsertAttributeSetting_Attributes] ON [dbo].[Attributes]
-FOR INSERT
-
-AS
-DECLARE @AttributeId nvarchar(max)
-SET @AttributeId = (SELECT Id FROM Inserted)
-	
-IF NOT EXISTS (SELECT * FROM AttributeSettings WHERE AttributeId = @AttributeId)
-BEGIN
-INSERT INTO AttributeSettings
-        (AttributeId)
-    SELECT
-        Id
-        FROM inserted
-END
-
+CREATE INDEX [IX_Attributes_Alias] ON [dbo].[Attributes] ([Alias]);
 GO
 
 CREATE TABLE [dbo].[AttributeOptions](
@@ -6434,20 +6405,20 @@ insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COR
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1005', 'MX - D+');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1006', 'MX - D');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1007', 'MX - E');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1101', 'BR - (Old) A1');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1102', 'BR - (Old) A2');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1103', 'BR - (Old) B1');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1104', 'BR - (Old) B2');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1105', 'BR - (Old) C1');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1106', 'BR - (Old) C2');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1107', 'BR - (Old) D');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1108', 'BR - (Old) E');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1111', 'BR - A');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1112', 'BR - B1');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1113', 'BR - B2');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1114', 'BR - C1');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1115', 'BR - C2');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1116', 'BR - DE');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1101', 'BZ - (Old) A1');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1102', 'BZ - (Old) A2');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1103', 'BZ - (Old) B1');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1104', 'BZ - (Old) B2');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1105', 'BZ - (Old) C1');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1106', 'BZ - (Old) C2');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1107', 'BZ - (Old) D');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1108', 'BZ - (Old) E');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1111', 'BZ - A');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1112', 'BZ - B1');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1113', 'BZ - B2');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1114', 'BZ - C1');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1115', 'BZ - C2');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1116', 'BZ - DE');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1201', 'CO - Class 1 (low-low)');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1202', 'CO - Class 2 (low)');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class', '1203', 'CO - Class 3 (medium-low)');
@@ -6600,20 +6571,20 @@ insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COR
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1005', 'MX - D+');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1006', 'MX - D');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1007', 'MX - E');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1101', 'BR - (Old) A1');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1102', 'BR - (Old) A2');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1103', 'BR - (Old) B1');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1104', 'BR - (Old) B2');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1105', 'BR - (Old) C1');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1106', 'BR - (Old) C2');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1107', 'BR - (Old) D');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1108', 'BR - (Old) E');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1111', 'BR - A');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1112', 'BR - B1');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1113', 'BR - B2');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1114', 'BR - C1');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1115', 'BR - C2');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1116', 'BR - DE');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1101', 'BZ - (Old) A1');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1102', 'BZ - (Old) A2');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1103', 'BZ - (Old) B1');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1104', 'BZ - (Old) B2');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1105', 'BZ - (Old) C1');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1106', 'BZ - (Old) C2');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1107', 'BZ - (Old) D');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1108', 'BZ - (Old) E');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1111', 'BZ - A');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1112', 'BZ - B1');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1113', 'BZ - B2');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1114', 'BZ - C1');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1115', 'BZ - C2');
+insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1116', 'BZ - DE');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1201', 'CO - Class 1 (low-low)');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1202', 'CO - Class 2 (low)');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('COREsocial_class_estimated', '1203', 'CO - Class 3 (medium-low)');
@@ -13786,7 +13757,6 @@ insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('DER
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('DERVUTILCompletes30Days', '4', '15 to 29 surveys completed Past 30 Days');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('DERVUTILCompletes30Days', '5', '30 to 99 surveys completed Past 30 Days');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('DERVUTILCompletes30Days', '6', 'over 100 surveys completed Past 30 Days');
-insert into [dbo].[Attributes](Id, Name, ShortName, Label, Type) Values('DERVGPPRHouseholdChildrenCount', 'Number_Children_in_HH', 'dervHHChildrenCount', 'Number Of children in House Hold calculated based on birthdate of Panel Member and House Hold Members(0-8)', 'quantity');
 --
 insert into [dbo].[Attributes](Id, Name, ShortName, Label, Type) Values('QUALTrueSampleRealStatus', 'TrueSample Real Status', 'tsRealStatus', 'TrueSample Real Status', 'Single');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('QUALTrueSampleRealStatus', '1', 'Valid');
@@ -21783,56 +21753,6 @@ insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPP
 insert into [dbo].[Attributes](Id, Name, ShortName, Label, Type) Values('GPPRQ48', 'Occupation_Specialization_CIE', 'CIEOccupationSpecialization ', 'Is the occupation of the Chief Income Earner a specialized profession, which requires a specialized vocational education?', 'Single');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ48', '1', 'Yes, with a special professional training (specialized)');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ48', '2', 'No, without a special professional training (not specialized)');
---
-insert into [dbo].[Attributes](Id, Name, ShortName, Label, Type) Values('GPPRQ49', 'Lat/Hisp_Primary_Country_Of_Descent', 'HispanicDescentPrimaryCountry', 'What do you consider to be your primary country of descent or ethnic background?', 'Single');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '1', 'Argentina');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '2', 'Bolivia');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '3', 'Brazil');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '4', 'Chile');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '5', 'Colombia');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '6', 'Costa Rica');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '7', 'Cuba');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '8', 'Dominican Republic');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '9', 'Ecuador');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '10', 'El Salvador');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '11', 'Guatemala');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '12', 'Honduras');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '13', 'Mexico');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '14', 'Nicaragua');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '15', 'Panama');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '16', 'Paraguay');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '17', 'Peru');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '18', 'Puerto Rico');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '19', 'Spain');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '20', 'Uruguay');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '21', 'Venezuela');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '22', 'Belize');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ49', '97', 'Other');
---
-insert into [dbo].[Attributes](Id, Name, ShortName, Label, Type) Values('GPPRQ50', 'Lat/Hisp_Other_Countries_Of_Descent', 'HispanicDescentOtherCountries', 'What is your country of origin? We would like to know the country or countries from which your Hispanic or Latino roots originate.', 'Multiple');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '1', 'Argentina');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '2', 'Bolivia');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '3', 'Brazil');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '4', 'Chile');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '5', 'Colombia');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '6', 'Costa Rica');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '7', 'Cuba');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '8', 'Dominican Republic');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '9', 'Ecuador');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '10', 'El Salvador');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '11', 'Guatemala');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '12', 'Honduras');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '13', 'Mexico');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '14', 'Nicaragua');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '15', 'Panama');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '16', 'Paraguay');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '17', 'Peru');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '18', 'Puerto Rico');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '19', 'Spain');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '20', 'Uruguay');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '21', 'Venezuela');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '22', 'Belize');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPPRQ50', '97', 'Other');
 --
 insert into [dbo].[Attributes](Id, Name, ShortName, Label, Type) Values('GPFNQ1', 'Financial products', 'FinanceProducts', 'Which of the following financial products you currently hold, either in your own name, or jointly with someone else, with any financial provider?  Please select all that apply.', 'Multiple');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('GPFNQ1', '1', 'Current account/s');
@@ -32224,16 +32144,6 @@ insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('MAP
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('MAPSV3_Q21H', '2', 'Secondary');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('MAPSV3_Q21H', '3', 'Primary');
 insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('MAPSV3_Q21H', '4', 'Not classified');
---
-insert into [dbo].[Attributes](Id, Name, ShortName, Label, Type) Values('QUALverity_score', 'Verity Score', 'VerityScore', 'Verity Score', 'Single');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('QUALverity_score', '0', 'Required Field Missing');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('QUALverity_score', '1', 'Invalid or High Risk Address');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('QUALverity_score', '2', 'Valid Address');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('QUALverity_score', '3', 'First Name / DOB validated');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('QUALverity_score', '4', 'Last Name validated');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('QUALverity_score', '5', 'Fully validated');
-insert into [dbo].[AttributeOptions](AttributeId, Code, Description) Values('QUALverity_score', '6', 'Name Validated with SSN4');
-insert into [dbo].[Attributes](Id, Name, ShortName, Label, Type) Values('QUALverity_id', 'Verity ID', 'Verity_ID', 'Verity ID', 'character');
 GO
 
 -- --------------------------------------------------
@@ -32245,6 +32155,8 @@ GO
 ALTER TABLE [dbo].[RespondentAttributes] WITH CHECK ADD CONSTRAINT [FK_RespondentAttributes_AttributeId] FOREIGN KEY([Ident]) REFERENCES [dbo].[Attributes] ([Id]) ON UPDATE CASCADE
 ALTER TABLE [dbo].[RespondentAttributes] CHECK CONSTRAINT [FK_RespondentAttributes_AttributeId]
 GO
+ALTER TABLE [dbo].[RequiredAttributes] WITH CHECK ADD CONSTRAINT [FK_RequiredAttributes_AttributeId] FOREIGN KEY([AttributeId]) REFERENCES [dbo].[Attributes] ([Id]) ON UPDATE CASCADE
+ALTER TABLE [dbo].[RequiredAttributes] CHECK CONSTRAINT [FK_RequiredAttributes_AttributeId]
 ALTER TABLE [dbo].[AttributeSettings] WITH CHECK ADD CONSTRAINT [FK_AttributeSettings_AttributeId] FOREIGN KEY([AttributeId]) REFERENCES [dbo].[Attributes] ([Id]) ON UPDATE CASCADE
 ALTER TABLE [dbo].[AttributeSettings] CHECK CONSTRAINT [FK_AttributeSettings_AttributeId]
 GO
